@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type check public API
+        run: deno task check
+
+      - name: Lint
+        run: deno lint src
+
+      - name: Format check
+        run: deno fmt --check src tests
+
+      # The snapshot test downloads a headless Chromium; skip it in CI.
+      - name: Test
+        run: deno task test
+        env:
+          LIVECELL_SKIP_SNAPSHOT: "1"
+
+      - name: Publish dry run
+        run: deno publish --dry-run

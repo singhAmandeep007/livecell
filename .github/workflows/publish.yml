@@ -1,0 +1,31 @@
+name: Publish to JSR
+
+# Publishes on a GitHub Release, so a push to main never ships a version by accident.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required for JSR's OIDC — no token to manage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Verify before publishing
+        run: |
+          deno task check
+          deno lint src
+          deno fmt --check src tests
+          deno task test
+        env:
+          LIVECELL_SKIP_SNAPSHOT: "1"
+
+      - name: Publish
+        run: deno publish
