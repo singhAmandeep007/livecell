@@ -173,6 +173,63 @@ Deno.test("mounts refuse path traversal", async () => {
   await Deno.remove(secret);
 });
 
+Deno.test("stopAll returns promptly even with an open live-reload stream", async () => {
+  // Regression: server.shutdown() waits for in-flight requests, and an SSE stream never
+  // finishes — so shutdown hung forever. Streams must be closed first.
+  live.mount("fix", FIXTURE);
+  const sse = await fetch(`${live.origin()}/__reload`);
+  assertEquals(sse.headers.get("content-type"), "text/event-stream");
+
+  const t0 = Date.now();
+  await live.stopAll();
+  const elapsed = Date.now() - t0;
+  assert(elapsed < 3000, `stopAll took ${elapsed}ms — it is hanging again`);
+  assertEquals(live.state.port, 0);
+  await sse.body?.cancel().catch(() => {});
+});
+
+Deno.test("stopAll escalates to SIGKILL for a child that ignores SIGTERM", async () => {
+  const port = 8953;
+  await live.serveCmd(
+    "deno",
+    [
+      "eval",
+      `Deno.addSignalListener("SIGTERM", () => {});   // deliberately ignore it
+     Deno.serve({ port: ${port} }, () => new Response("stubborn"));`,
+    ],
+    port,
+    { timeoutMs: 15000 },
+  );
+  assertEquals(live.state.procs.length, 1);
+
+  const t0 = Date.now();
+  await live.stopAll({ graceMs: 600 });
+  const elapsed = Date.now() - t0;
+
+  assertEquals(live.state.procs.length, 0);
+  assert(elapsed < 5000, `escalation took ${elapsed}ms`);
+
+  // the port must actually be free again
+  await new Promise((r) => setTimeout(r, 200));
+  let stillUp = false;
+  try {
+    await fetch(`http://localhost:${port}/`, { signal: AbortSignal.timeout(500) });
+    stillUp = true;
+  } catch { /* expected: connection refused */ }
+  assert(!stillUp, `process survived stopAll — :${port} still answering`);
+});
+
+Deno.test("status() reports what is running", async () => {
+  live.mount("fix", FIXTURE);
+  live.mermaid("flowchart LR\n A --> B");
+  const st = live.status();
+  assert(st.port > 0);
+  assert(st.mounts.includes("fix"));
+  assert(st.pages > 0);
+  await live.stopAll();
+  assertEquals(live.status().port, 0);
+});
+
 Deno.test("stopAll shuts the server down and kills children", async () => {
   await live.stopAll();
   assertEquals(live.state.port, 0);

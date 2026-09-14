@@ -31,11 +31,14 @@
 
 export {
   addPage as addPageForTest,
+  killPort,
   mountDir as mount,
   origin,
   start,
   state,
+  status,
   stopAll,
+  type StopOptions,
 } from "./server.ts";
 export { clearLogs, embed, type EmbedOptions, logs, showLogs } from "./embed.ts";
 export { mermaid } from "./mermaid.ts";

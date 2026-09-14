@@ -1,8 +1,11 @@
 {
-  "name": "@livecell/livecell",
+  "name": "@singhamandeep007/livecell",
   "version": "0.1.0",
   "license": "MIT",
   "exports": "./src/mod.ts",
+  "imports": {
+    "@astral/astral": "jsr:@astral/astral@^0.4"
+  },
   "tasks": {
     "test": "deno test -A --no-check tests/",
     "check": "deno check src/mod.ts",
@@ -19,8 +22,5 @@
       "LICENSE",
       "deno.json"
     ]
-  },
-  "imports": {
-    "@astral/astral": "jsr:@astral/astral@^0.4"
   }
 }
