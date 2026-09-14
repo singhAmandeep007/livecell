@@ -1,0 +1,26 @@
+{
+  "name": "@livecell/livecell",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": "./src/mod.ts",
+  "tasks": {
+    "test": "deno test -A --no-check tests/",
+    "check": "deno check src/mod.ts",
+    "fmt": "deno fmt src tests",
+    "lint": "deno lint src"
+  },
+  "fmt": {
+    "lineWidth": 100
+  },
+  "publish": {
+    "include": [
+      "src",
+      "README.md",
+      "LICENSE",
+      "deno.json"
+    ]
+  },
+  "imports": {
+    "@astral/astral": "jsr:@astral/astral@^0.4"
+  }
+}

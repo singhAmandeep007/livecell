@@ -1,0 +1,22 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "livecell",
+  "elements": [
+    { "type": "rectangle", "id": "a", "x": 60, "y": 60, "width": 200, "height": 80,
+      "angle": 0, "strokeColor": "#0284c7", "backgroundColor": "#e0f2fe", "fillStyle": "solid",
+      "strokeWidth": 2, "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [],
+      "frameId": null, "roundness": { "type": 3 }, "seed": 1, "version": 1, "versionNonce": 1,
+      "isDeleted": false, "boundElements": [], "updated": 1, "link": null, "locked": false },
+    { "type": "text", "id": "at", "x": 92, "y": 92, "width": 140, "height": 24,
+      "angle": 0, "strokeColor": "#0f172a", "backgroundColor": "transparent", "fillStyle": "solid",
+      "strokeWidth": 1, "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [],
+      "frameId": null, "roundness": null, "seed": 2, "version": 1, "versionNonce": 2,
+      "isDeleted": false, "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "edit me & save", "fontSize": 18, "fontFamily": 1, "textAlign": "center",
+      "verticalAlign": "top", "containerId": null, "originalText": "edit me & save",
+      "lineHeight": 1.25, "baseline": 16 }
+  ],
+  "appState": { "gridSize": null, "viewBackgroundColor": "#ffffff" },
+  "files": {}
+}
