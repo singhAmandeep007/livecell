@@ -129,13 +129,32 @@ Embeds are **live only on the machine running the notebook**. On GitHub, or for 
 run the cells, an iframe to `localhost` shows nothing. Use `snapshot: true` (or
 `live.snapshot(...)`) to write a PNG fallback if the notebook needs to be readable elsewhere.
 
+## Working on notebooks without wrecking git
+
+Running a notebook bakes outputs and execution counts into the JSON, which makes diffs enormous and
+unreadable. This repo ships a git clean-filter that strips them on stage:
+
+```bash
+deno task setup    # once per clone — enables the filter
+```
+
+After that, running a notebook produces **no diff at all** until you change actual content. Your
+local file keeps its outputs; only what git records is normalised.
+
 ## Development
 
 ```bash
-deno task test     # 14 tests, no network needed
+deno task setup    # enable the notebook strip filter (once per clone)
+deno task test     # 18 tests
 deno task check    # type-check the public API
 deno task lint
 deno task fmt
+```
+
+`snapshot()` downloads a headless Chromium on first run. To skip that test:
+
+```bash
+LIVECELL_SKIP_SNAPSHOT=1 deno task test
 ```
 
 ## License

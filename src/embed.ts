@@ -7,9 +7,11 @@ export interface EmbedOptions {
   /** Caption shown above the frame. */
   label?: string;
   /**
-   * Also write a PNG next to the notebook and reference it, so the output still shows
-   * something on GitHub / for anyone without the server running. Requires a headless
-   * browser (see `snapshot.ts`).
+   * Capture a PNG of the page to this path, so you have something to show where the
+   * server does not exist (GitHub, a colleague's checkout). Reference it from a markdown
+   * cell — notebook *outputs* are usually stripped from version control.
+   *
+   * Downloads a headless Chromium on first use. See `snapshot.ts`.
    */
   snapshot?: string | false;
   /** Extra sandbox tokens. Defaults allow scripts, same-origin, forms, popups, modals. */
@@ -42,7 +44,34 @@ export function frameMarkup(src: string, opts: EmbedOptions = {}): string {
 
 /** Embed a running page as cell output. */
 export function embed(pathOrUrl: string, opts: EmbedOptions = {}): void {
-  html(frameMarkup(resolveUrl(pathOrUrl), opts));
+  const src = resolveUrl(pathOrUrl);
+  html(frameMarkup(src, opts));
+  if (opts.snapshot) void captureFallback(src, opts.snapshot);
+}
+
+/**
+ * Embed *and* wait for the PNG fallback to be written. Use this when you want the file to
+ * exist before the cell finishes (e.g. a build step that commits the image).
+ */
+export async function embedWithSnapshot(
+  pathOrUrl: string,
+  opts: EmbedOptions & { snapshot: string },
+): Promise<string | null> {
+  const src = resolveUrl(pathOrUrl);
+  html(frameMarkup(src, opts));
+  return await captureFallback(src, opts.snapshot);
+}
+
+async function captureFallback(src: string, out: string): Promise<string | null> {
+  const { snapshot } = await import("./snapshot.ts");
+  const written = await snapshot(src, out);
+  if (written) {
+    console.log(
+      `[livecell] snapshot → ${written}\n` +
+        `           reference it from a markdown cell: ![preview](${written})`,
+    );
+  }
+  return written;
 }
 
 /** Console output collected from embedded pages (newest last). */

@@ -40,7 +40,7 @@ export {
   stopAll,
   type StopOptions,
 } from "./server.ts";
-export { clearLogs, embed, type EmbedOptions, logs, showLogs } from "./embed.ts";
+export { clearLogs, embed, type EmbedOptions, embedWithSnapshot, logs, showLogs } from "./embed.ts";
 export { mermaid } from "./mermaid.ts";
 export { excalidraw, type ExcalidrawOptions } from "./excalidraw.ts";
 export { playground, type PlaygroundOptions } from "./playground.ts";

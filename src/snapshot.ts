@@ -20,9 +20,10 @@ export async function snapshot(
 ): Promise<string | null> {
   const { width = 1000, height = 620, waitMs = 1200 } = opts;
   try {
-    // Imported lazily and by bare specifier (declared in deno.json imports) so the rest
-    // of livecell carries no headless-browser dependency.
-    const { launch } = await import("@astral/astral");
+    // Lazily imported with an explicit specifier, NOT a bare one: this is an optional
+    // dependency, and a consumer of the published package has no import map entry for it.
+    // deno-lint-ignore no-import-prefix
+    const { launch } = await import("jsr:@astral/astral@^0.4");
     const browser = await launch({ headless: true });
     const page = await browser.newPage(url);
     await page.setViewportSize({ width, height });

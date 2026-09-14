@@ -24,6 +24,20 @@ Deno.test("start() is idempotent and returns a live port", () => {
   assert(p1 > 0);
 });
 
+Deno.test("start() avoids a port already in use", async () => {
+  await live.stopAll();
+  const basePort = 8900;
+  const blocker = Deno.serve({ port: basePort, onListen: () => {} }, () => new Response("busy"));
+  try {
+    const chosen = live.start(basePort);
+    assert(chosen !== basePort, `collided on :${basePort}`);
+    assert(chosen > basePort, "should scan upward for a free port");
+  } finally {
+    await live.stopAll();
+    await blocker.shutdown();
+  }
+});
+
 Deno.test("mount() serves files, directory indexes and 404s", async () => {
   live.mount("fix", FIXTURE);
 
@@ -228,6 +242,30 @@ Deno.test("status() reports what is running", async () => {
   assert(st.pages > 0);
   await live.stopAll();
   assertEquals(live.status().port, 0);
+});
+
+// Downloads a headless Chromium on first run. Skip with LIVECELL_SKIP_SNAPSHOT=1.
+Deno.test({
+  name: "snapshot() writes a real PNG of a served page",
+  ignore: Deno.env.get("LIVECELL_SKIP_SNAPSHOT") === "1",
+  async fn() {
+    live.mount("fix", FIXTURE);
+    const out = await Deno.makeTempFile({ suffix: ".png" });
+    const written = await live.snapshot(`${live.origin()}/m/fix/index.html`, out, {
+      width: 600,
+      height: 300,
+      waitMs: 400,
+    });
+    assert(written !== null, "snapshot returned null — headless browser unavailable");
+
+    const bytes = await Deno.readFile(out);
+    assert(bytes.length > 1000, `png suspiciously small: ${bytes.length} bytes`);
+    // PNG magic number
+    assertEquals([...bytes.slice(0, 4)], [0x89, 0x50, 0x4e, 0x47]);
+
+    await Deno.remove(out);
+    await live.stopAll();
+  },
 });
 
 Deno.test("stopAll shuts the server down and kills children", async () => {
