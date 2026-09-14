@@ -1,6 +1,7 @@
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1";
 import * as live from "../src/mod.ts";
 import { frameMarkup, resolveUrl } from "../src/embed.ts";
+import { safeJoin } from "../src/server.ts";
 import { mimeOf } from "../src/server.ts";
 
 const FIXTURE = await Deno.makeTempDir({ prefix: "livecell_fix_" });
@@ -168,22 +169,59 @@ Deno.test("serveCmd throws a clear error when the port never opens", async () =>
   assertStringIncludes(msg, "did not answer on :8952");
 });
 
-Deno.test("mounts refuse path traversal", async () => {
+Deno.test("safeJoin resolves segments and refuses escapes", () => {
+  const base = "/srv/site";
+  // normal paths
+  assertEquals(safeJoin(base, "index.html"), "/srv/site/index.html");
+  assertEquals(safeJoin(base, "a/b/c.css"), "/srv/site/a/b/c.css");
+  assertEquals(safeJoin(base, "./a/./b.js"), "/srv/site/a/b.js");
+  // `..` that stays inside is fine
+  assertEquals(safeJoin(base, "a/../b.js"), "/srv/site/b.js");
+  assertEquals(safeJoin(base, "a/b/../../c.js"), "/srv/site/c.js");
+  // anything that would escape is refused
+  assertEquals(safeJoin(base, ".."), null);
+  assertEquals(safeJoin(base, "../etc/passwd"), null);
+  assertEquals(safeJoin(base, "a/../../etc/passwd"), null);
+  assertEquals(safeJoin(base, "../../../../../../etc/passwd"), null);
+  // NUL and backslash are never legitimate
+  assertEquals(safeJoin(base, "a\\b"), null);
+  assertEquals(safeJoin(base, "a\0b"), null);
+  // a string-prefix check would have WRONGLY allowed this one
+  assert(safeJoin(base, "../site-evil/x") === null);
+});
+
+Deno.test("mounts refuse path traversal over HTTP", async () => {
+  // Deliberately platform-independent: macOS temp dirs are deep (/var/folders/...) while
+  // Linux uses /tmp, so a fixed number of `../` only escaped on one of them. Use enough
+  // to escape anywhere, and verify against a real file outside the mount.
   const secret = await Deno.makeTempFile({ prefix: "livecell_secret_" });
   await Deno.writeTextFile(secret, "SECRET-SHOULD-NOT-LEAK");
   live.mount("fix", FIXTURE);
 
-  for (
-    const attack of [
-      `/m/fix/../../../..${secret}`,
-      `/m/fix/..%2f..%2f..%2f..${secret.replaceAll("/", "%2f")}`,
-      `/m/fix/....//....//${secret}`,
-    ]
-  ) {
+  const up = "../".repeat(20);
+  const attacks = [
+    `/m/fix/${up}${secret}`,
+    `/m/fix/${encodeURIComponent(up)}${encodeURIComponent(secret)}`,
+    `/m/fix/${up.replaceAll("/", "%2f")}${secret.replaceAll("/", "%2f")}`,
+    `/m/fix/....//....//${secret}`,
+    `/m/fix/..;/..;/${secret}`,
+    `/m/fix/%2e%2e%2f%2e%2e%2f${secret.replaceAll("/", "%2f")}`,
+  ];
+
+  for (const attack of attacks) {
     const res = await fetch(`${live.origin()}${attack}`);
     const body = await res.text();
-    assert(!body.includes("SECRET-SHOULD-NOT-LEAK"), `traversal leaked via ${attack}`);
+    assert(
+      !body.includes("SECRET-SHOULD-NOT-LEAK"),
+      `traversal leaked via ${attack} (status ${res.status})`,
+    );
   }
+
+  // and the mount still serves its own files normally
+  const ok = await fetch(`${live.origin()}/m/fix/index.html`);
+  assertEquals(ok.status, 200);
+  assertStringIncludes(await ok.text(), "fixture");
+
   await Deno.remove(secret);
 });
 

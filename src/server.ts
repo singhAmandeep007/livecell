@@ -121,6 +121,31 @@ export function broadcastReload(): void {
   }
 }
 
+/**
+ * Join `rel` onto `base`, resolving `.`/`..` ourselves and refusing anything that would
+ * escape the mount. Returns null if the path is not safe.
+ *
+ * A string prefix check on the *unresolved* path is NOT enough: `/srv/x/../../etc/passwd`
+ * starts with `/srv/x`, yet the filesystem resolves it outside the mount. This walks the
+ * segments instead, so `..` can never pop above the root.
+ */
+export function safeJoin(base: string, rel: string): string | null {
+  const parts: string[] = [];
+  for (const raw of rel.split("/")) {
+    // backslashes and NULs are never legitimate here
+    if (raw.includes("\\") || raw.includes("\0")) return null;
+    if (raw === "" || raw === ".") continue;
+    if (raw === "..") {
+      if (parts.length === 0) return null; // would escape the mount
+      parts.pop();
+      continue;
+    }
+    parts.push(raw);
+  }
+  if (parts.length === 0) return null;
+  return `${base}/${parts.join("/")}`;
+}
+
 const CORS = { "access-control-allow-origin": "*" };
 
 async function handler(req: Request): Promise<Response> {
@@ -182,9 +207,10 @@ async function handler(req: Request): Promise<Response> {
     if (!dir) return new Response(`livecell: no mount "${name}"`, { status: 404, headers: CORS });
     let rel = rest.join("/") || "index.html";
     if (rel.endsWith("/")) rel += "index.html";
-    // refuse path traversal out of the mount
-    const full = `${dir}/${rel}`;
-    if (!full.startsWith(dir)) return new Response("forbidden", { status: 403, headers: CORS });
+    const full = safeJoin(dir, rel);
+    if (full === null) {
+      return new Response("livecell: forbidden", { status: 403, headers: CORS });
+    }
     try {
       const data = await Deno.readFile(full);
       const ct = mimeOf(rel);

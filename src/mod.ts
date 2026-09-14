@@ -34,6 +34,7 @@ export {
   mountDir as mount,
   origin,
   page,
+  safeJoin,
   start,
   state,
   status,
