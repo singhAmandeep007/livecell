@@ -1,4 +1,4 @@
-import { addPage } from "./server.ts";
+import { page } from "./server.ts";
 import { embed, type EmbedOptions } from "./embed.ts";
 
 export interface ExcalidrawOptions extends EmbedOptions {
@@ -51,7 +51,7 @@ export async function excalidraw(
        };`
     : "";
 
-  const page = [
+  const doc = [
     '<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">',
     saveBar,
     '<div id="root" style="height:100vh"></div>',
@@ -71,5 +71,5 @@ export async function excalidraw(
     "</script></body></html>",
   ].join("\n");
 
-  embed(addPage(page), { height, ...rest });
+  embed(page(doc), { height, ...rest });
 }

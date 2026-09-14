@@ -12,6 +12,10 @@ live.mount("app", "/abs/path/to/project");
 live.embed("/m/app/index.html", { height: 480 }); // ← the real app, running, in the cell
 ```
 
+![a project embedded in a notebook cell](examples/demo-project/preview.png)
+
+_(that image was produced by `livecell.snapshot()` — the same fallback it gives your notebooks)_
+
 ## Why this exists
 
 Notebooks are great at _narrative + runnable code_, and useless at showing anything visual. A Deno

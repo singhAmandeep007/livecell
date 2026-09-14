@@ -1,4 +1,4 @@
-import { addPage } from "./server.ts";
+import { page } from "./server.ts";
 import { embed, type EmbedOptions } from "./embed.ts";
 
 export interface PlaygroundOptions extends EmbedOptions {
@@ -24,7 +24,7 @@ export function playground(opts: PlaygroundOptions = {}): void {
   } = opts;
 
   const enc = (s: string) => encodeURIComponent(s);
-  const page = `<!doctype html><html><head><meta charset="utf-8"><style>
+  const doc = `<!doctype html><html><head><meta charset="utf-8"><style>
     body { margin:0; font:13px ui-monospace,Menlo,monospace; }
     .wrap { display:flex; flex-direction:${vertical ? "column" : "row"}; height:100vh; }
     .panes { display:flex; flex-direction:column; flex:1; min-width:0; border-right:1px solid #e2e8f0; }
@@ -57,5 +57,5 @@ export function playground(opts: PlaygroundOptions = {}): void {
       render();
     </script>
   </body></html>`;
-  embed(addPage(page), { height, ...rest });
+  embed(page(doc), { height, ...rest });
 }

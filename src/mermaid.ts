@@ -1,4 +1,4 @@
-import { addPage } from "./server.ts";
+import { page } from "./server.ts";
 import { escapeHtml } from "./jupyter.ts";
 import { embed, type EmbedOptions } from "./embed.ts";
 
@@ -10,7 +10,7 @@ import { embed, type EmbedOptions } from "./embed.ts";
  */
 export function mermaid(code: string, opts: EmbedOptions & { theme?: string } = {}): void {
   const { theme = "default", height = 320, ...rest } = opts;
-  const url = addPage(
+  const url = page(
     `<!doctype html><html><head><meta charset="utf-8"></head>` +
       `<body style="margin:0;font:14px system-ui">` +
       `<pre class="mermaid">${escapeHtml(code)}</pre>` +

@@ -30,10 +30,10 @@
  */
 
 export {
-  addPage as addPageForTest,
   killPort,
   mountDir as mount,
   origin,
+  page,
   start,
   state,
   status,

@@ -100,8 +100,8 @@ Deno.test("__save writes an edited scene back to disk", async () => {
   assertEquals(written.elements[0].id, "a");
 });
 
-Deno.test("generated pages are registered and served", async () => {
-  const url = live.addPageForTest("<h1>generated</h1>");
+Deno.test("page() serves arbitrary HTML", async () => {
+  const url = live.page("<h1>generated</h1>");
   const res = await fetch(url);
   assertEquals(res.status, 200);
   assertStringIncludes(await res.text(), "generated");
@@ -266,6 +266,17 @@ Deno.test({
     await Deno.remove(out);
     await live.stopAll();
   },
+});
+
+Deno.test("stopAll releases generated pages but keeps mounts", async () => {
+  live.mount("fix", FIXTURE);
+  live.mermaid("flowchart LR\n A --> B");
+  live.playground({ css: ".a{}" });
+  assert(live.status().pages >= 2);
+
+  await live.stopAll();
+  assertEquals(live.status().pages, 0, "generated pages should not accumulate");
+  assert(live.status().mounts.includes("fix"), "mounts are config and should survive");
 });
 
 Deno.test("stopAll shuts the server down and kills children", async () => {

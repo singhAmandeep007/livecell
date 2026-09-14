@@ -91,8 +91,18 @@ export function mountDir(name: string, dir: string): string {
   return `${origin()}/m/${name}/`;
 }
 
-/** Register a generated HTML page, returning its URL. */
-export function addPage(markup: string): string {
+/**
+ * Serve a string of HTML and return its URL.
+ *
+ * Useful for anything self-contained you want to render with real scripts — a chart, a
+ * custom widget, a third-party embed. Because it is served from localhost rather than an
+ * iframe `srcdoc`, CDN scripts and ES modules load normally.
+ *
+ * ```ts
+ * live.embed(live.page(`<h1>hi</h1><script type="module">…</script>`));
+ * ```
+ */
+export function page(markup: string): string {
   const id = crypto.randomUUID().slice(0, 8);
   state.pages.set(id, markup);
   start();
@@ -334,6 +344,13 @@ export async function stopAll(opts: StopOptions = {}): Promise<string> {
   for (const p of ports) {
     if (await killPort(p)) notes.push(`freed :${p}`);
   }
+
+  // 6 · release generated pages. They are ephemeral (one per mermaid/playground/
+  //     excalidraw call) and would otherwise grow unbounded across a long session.
+  //     Mounts are kept: they are cheap config, and dropping them would break the
+  //     common flow of stopping, then re-running a cell that only calls embed().
+  if (state.pages.size) notes.push(`${state.pages.size} page(s)`);
+  state.pages.clear();
 
   return `livecell: stopped — ${notes.join(", ") || "nothing was running"}`;
 }

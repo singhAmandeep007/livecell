@@ -1,4 +1,4 @@
-import { addPage, origin, start, state } from "./server.ts";
+import { origin, page, start, state } from "./server.ts";
 import { escapeHtml, html } from "./jupyter.ts";
 
 export interface EmbedOptions {
@@ -96,4 +96,4 @@ export function showLogs(limit = 50): void {
   );
 }
 
-export { addPage };
+export { page };
