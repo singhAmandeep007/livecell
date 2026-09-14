@@ -10,7 +10,8 @@
     "test": "deno test -A --no-check tests/",
     "check": "deno check src/mod.ts",
     "fmt": "deno fmt src tests",
-    "lint": "deno lint src"
+    "lint": "deno lint src",
+    "setup": "deno run -A tools/setup.ts"
   },
   "fmt": {
     "lineWidth": 100

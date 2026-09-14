@@ -1,0 +1,6 @@
+# Strip notebook outputs on stage so diffs stay readable.
+# Enable the filter once per clone with: deno task setup
+*.ipynb filter=nbstrip
+
+# Notebooks are JSON; never let git mangle line endings.
+*.ipynb -text
