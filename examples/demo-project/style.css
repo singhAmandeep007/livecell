@@ -1,4 +1,19 @@
-body { font: 15px system-ui; padding: 20px; background: #f8fafc; color: #0f172a; }
-button { font: 14px system-ui; padding: 6px 14px; border-radius: 6px;
-         border: 1px solid #0284c7; background: #0284c7; color: #fff; cursor: pointer; }
-li { margin: 4px 0; color: #334155; }
+body {
+  font: 15px system-ui;
+  padding: 20px;
+  background: #f8fafc;
+  color: #0f172a;
+}
+button {
+  font: 14px system-ui;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #0284c7;
+  background: #0284c7;
+  color: #fff;
+  cursor: pointer;
+}
+li {
+  margin: 4px 0;
+  color: #334155;
+}
